@@ -78,9 +78,6 @@ class GGUFModelPatcher(comfy.model_patcher.ModelPatcher):
 
     mmap_released = False
     def load(self, *args, force_patch_weights=False, **kwargs):
-        # always call `patch_weight_to_device` even for lowvram
-        super().load(*args, force_patch_weights=True, **kwargs)
-
         # make sure nothing stays linked to mmap after first load
         if not self.mmap_released:
             linked = []
@@ -102,6 +99,10 @@ class GGUFModelPatcher(comfy.model_patcher.ModelPatcher):
                     # TODO: possible to OOM, find better way to detach
                     m.to(self.load_device).to(self.offload_device)
             self.mmap_released = True
+
+        # always call `patch_weight_to_device` even for lowvram
+        super().load(*args, force_patch_weights=True, **kwargs)
+
 
     def clone(self, *args, **kwargs):
         src_cls = self.__class__
